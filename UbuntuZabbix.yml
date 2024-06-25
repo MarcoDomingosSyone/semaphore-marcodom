@@ -1,0 +1,98 @@
+---
+- name: Deploy Zabbix for Ubuntu Server
+  hosts: UbuntuServer
+  become: yes
+  tasks:
+
+  - name: Get the Zabbix repository
+    ansible.builtin.command: wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-1+ubuntu22.04_all.deb
+
+  - name: Installs the Zabbix Package on Ubuntu
+    ansible.builtin.command: dpkg -i zabbix-release_7.0-1+ubuntu22.04_all.deb
+
+  - name: Updating the system after getting Zabbix Repository and installing the package
+    ansible.builtin.command: apt update -y
+
+  - name: Installation of Zabbix on Ubuntu Server
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - zabbix-server-mysql
+      - zabbix-frontend-php
+      - zabbix-apache-conf
+      - zabbix-sql-scripts
+      - zabbix-agent
+
+  - name: Starting Zabbix Server
+    ansible.builtin.systemd_service:
+      name: zabbix-server
+      state: started
+
+  - name: Starting Zabbix Agent
+    ansible.builtin.systemd_service:
+      name: zabbix-agent
+      state: started
+
+  - name: Create database for Zabbix with the name zabbix
+    mysql_db:
+      name: zabbix
+      login_user: root
+      login_password: 27Sy72
+      encoding: utf8
+      state: present
+
+  - name: Sets the password for the database in /etc/zabbix/zabbix_server.conf
+    ansible.builtin.shell:
+      cmd: echo 'DBPassword=27Sy72' >> /etc/zabbix/zabbix_server.conf
+
+  - name: Creates the user zabbix and grants all privileges to this user
+    mysql_user:
+      login_user: root
+      login_password: 27Sy72
+      name: zabbix
+      password: 27Sy72
+      priv: 'zabbix.*:ALL,GRANT'
+      state: present
+      
+
+  - name: set global log_bin_trust_function_creators to value 1
+    community.mysql.mysql_variables:
+      login_user: root
+      login_password: 27Sy72
+      variable: log_bin_trust_function_creators
+      value: 1
+
+  - name: Import Zabbix schema and data
+    mysql_db:
+      name: zabbix
+      login_user: zabbix
+      login_password: 27Sy72
+      state: import
+      target: /usr/share/zabbix-sql-scripts/mysql/server.sql.gz
+
+  - name: set global log_bin_trust_function_creators to value 0
+    community.mysql.mysql_variables:
+      login_user: root
+      login_password: 27Sy72
+      variable: log_bin_trust_function_creators
+      value: 0
+
+  - name: Restarts zabbix-server to refresh connection
+    ansible.builtin.systemd_service:
+      name: zabbix-server
+      state: restarted
+
+  - name: Restarts zabbix-agent to refresh connection
+    ansible.builtin.systemd_service:
+      name: zabbix-agent
+      state: restarted
+
+  - name: Restarts apache2 to access zabbix WEB UI
+    ansible.builtin.systemd_service:
+      name: apache2
+      state: restarted
+
+  - name: How to access zabbix
+    ansible.builtin.debug:
+      msg: "You can access zabbix via brower with http://your_ip_address/zabbix and start the manual configuration"

@@ -1,0 +1,70 @@
+---
+- name: Setup de ambiente dev
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install LAMP stack (AlmaLinux)
+      ansible.builtin.yum:
+        name:
+          - httpd
+          - mysql-server
+          - php
+          - php-mysqlnd
+          - python3-PyMySQL
+        state: present
+      when: ansible_facts["distribution"] == "AlmaLinux"
+
+    - name: Install Lamp Stack (UbuntuServer)
+      ansible.builtin.apt:
+        name:
+          - apache2
+          - tasksel
+          - php
+          - libapache2-mod-php
+          - php-mysql
+          - python3-pip
+        state: latest
+      when: ansible_facts["distribution"] == "Ubuntu"
+
+    - name: Install PyMySql on UbuntuServer
+      ansible.builtin.pip:
+        name:
+          - pymysql
+        state: latest
+      when: ansible_facts["distribution"] == "Ubuntu"
+
+    - name: Start and enable Apache (AlmaLinux)
+      ansible.builtin.systemd_service:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_facts["distribution"] == "AlmaLinux"
+
+    - name: Start and enable Apache (Ubuntu)
+      ansible.builtin.systemd_service:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_facts["distribution"] == "Ubuntu"
+
+    - name: Start and enable MySQL (AlmaLinux)
+      ansible.builtin.systemd_service:
+        name: mysqld
+        state: started
+        enabled: yes
+      when: ansible_facts["distribution"] == "AlmaLinux"
+
+    - name: Start and enable mysql (Ubuntu)
+      ansible.builtin.systemd_service:
+        name: mysql
+        state: started
+        enabled: yes
+      when: ansible_facts["distribution"] == "Ubuntu"
+
+    - name: Creates root user on mysql.
+      mysql_user:
+        name: root
+        login_unix_socket: /run/mysqld/mysqld.sock
+        login_user: root
+        login_password: 27Sy72
+        state: present

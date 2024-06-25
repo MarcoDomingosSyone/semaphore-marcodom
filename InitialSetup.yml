@@ -1,0 +1,41 @@
+---
+- name: Setup inicial para as máquinas de azure
+  hosts: all
+  become: yes
+  vars:
+    ansibleadmin: marcodomingos
+    user: syoneadm
+    ssh_key_src: /home/{{ ansibleadmin }}/.ssh/id_ed25519.pub
+    ssh_key_dest: /home/{{ user }}/.ssh/authorized_keys
+
+  tasks:
+    - name: Instalando ultima versão do vim, nano e tmux
+      package:
+        name:
+          - vim
+          - nano
+          - tmux
+        state: present
+
+    - name: Create user syoneadm
+      user:
+        name: "{{ user }}"
+        state: present
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Confirmando a existência do diretório .ssh do user syoneadm
+      file:
+        path: /home/{{ user }}/.ssh
+        state: directory
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0700'
+
+    - name: A copiar a chave ssh para os hosts
+      copy:
+        src: "{{ ssh_key_src }}"
+        dest: "{{ ssh_key_dest }}"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0600'

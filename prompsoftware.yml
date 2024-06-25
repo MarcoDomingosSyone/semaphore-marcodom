@@ -1,0 +1,18 @@
+---
+- name: Software Deploy Ansible
+  hosts: all
+  become: yes
+  vars_prompt:
+    - name: softwarename
+      prompt: "Please inform which software you want to install on azure hosts "
+      private: no
+  tasks:
+    - name: Install the specified program
+      package:
+        name: "{{ softwarename }}"
+        state: latest
+    - name: Starting {{ softwarename }} service
+      ansible.builtin.service:
+        name: "{{ softwarename }}"
+        state: started
+        enabled: yes

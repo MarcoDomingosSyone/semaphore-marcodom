@@ -1,0 +1,39 @@
+---
+- name: Services check
+  hosts: UbuntuServer
+  become: yes
+  tasks:
+    - name: Check if services are running, if not, the playbook starts the service
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        state: started
+      with_items:
+        - apache2.service
+        - docker.service
+        - mysql.service
+
+    - name: Check if services are running and providing the results
+      command: systemctl status "{{ item }}"
+      with_items:
+        - apache2.service
+        - docker.service
+        - mysql.service
+      register: services_state
+
+    - name: Shows the service service_status
+      debug:
+        var: services_state
+
+    - name: Check if containers are on the system.
+      docker_container_info:
+        name: "{{ item }}"
+      register: container_status
+      loop:
+        - mariadbubuntu
+        - ubuntuweb
+        - watchtower
+        
+    - name: Display container status
+      debug:
+      loop: "{{ container_status.results }}"
+    

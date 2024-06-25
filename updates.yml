@@ -1,0 +1,9 @@
+---
+- name: Updates for UbuntuServer and AlmaLinux
+  hosts: all
+  become: yes
+  tasks:
+    - name: Updating system 
+      ansible.builtin.package:
+        name: "*"
+        state: latest
