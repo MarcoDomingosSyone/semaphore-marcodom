@@ -1,0 +1,27 @@
+---
+- name: Setup inicial para asmáquinas de azure
+  hosts: localhost
+  tasks:
+    - name: Set a variable with today's date
+      set_fact:
+        today_date: "{{ ansible_date_time.date }}"
+
+    - name: Create snapshot for Door access Win
+      community.general.proxmox_snap:
+        api_host: 192.168.99.2
+        api_user: ansible@pve
+        api_password: eM8v!5M8zr%zxZny@UR6
+        snapname: Door-patchTuesday-{{ today_date }}
+        state: present
+        vmid: 102
+        vmstate: true
+
+    - name: Create snapshot for Zabbix Proxy
+      community.general.proxmox_snap:
+        api_host: 192.168.99.2
+        api_user: ansible@pve
+        api_password: eM8v!5M8zr%zxZny@UR6
+        snapname: ZabbixProxy-patchTuesday-{{ today_date }}
+        state: present
+        vmid: 106
+        vmstate: true
