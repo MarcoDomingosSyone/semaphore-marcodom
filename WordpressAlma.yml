@@ -1,0 +1,92 @@
+---
+- name: Deploy Wordpress
+  hosts: AlmaLinux
+  become: yes
+  vars:
+   wordpress_Template: /home/marcodomingos/wordpressAlma.conf
+   homefolder: /home/marcodomingos/
+   wordpress_location: /home/marcodomingos/wordpress
+
+  tasks:
+    - name: Updates AlmaLinux before wordpress Installation
+      ansible.builtin.package:
+        name: "*"
+        state: latest
+
+    - name: Installs httpd 
+      ansible.builtin.yum:
+        name:
+          - httpd
+          
+    - name: Download wordpress
+      ansible.builtin.get_url:
+        url: https://pt.wordpress.org/latest-pt_PT.tar.gz
+        dest: "{{ homefolder }}"
+
+    - name: Extracts wordpress-6.5.5-pt_PT.tar.gz 
+      ansible.builtin.shell:
+        cmd: tar -xvf "{{ homefolder }}"/wordpress-6.5.5-pt_PT.tar.gz
+
+    - name: Copy wordpress folder to /var/www/html
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ wordpress_location }}"
+        dest: /var/www/html
+
+    - name: Takes the content inside wordpress folder and moves to /var/www/html
+      ansible.builtin.shell:
+        chdir: /var/www/html
+        cmd: mv wordpress/* .
+
+    - name: Moves wordpress.conf from server to /etc/httpd/conf.d/wordpress.conf
+      ansible.builtin.copy:
+        src: "{{ wordpress_Template }}"
+        dest: /etc/httpd/conf.d/wordpress.conf
+
+    - name: Changes the owner and group owner of /var/www/html
+      ansible.builtin.shell:
+        cmd: sudo chown -R apache:apache /var/www/html
+
+    - name: Renames wp-config-sample.php to wp-config.php
+      ansible.builtin.shell:
+        chdir: /var/www/html
+        cmd: mv wp-config-sample.php wp-config.php
+
+    - name: Reload httpd.service
+      ansible.builtin.systemd_service:
+        name: httpd
+        state: reloaded
+
+    - name: Sets the database into the configuration file
+      ansible.builtin.command:
+        cmd: sudo -u apache sed -i 's/database_name_here/wordpress/' /var/www/html/wp-config.php
+
+    - name: Sets the username of wordpress database into the configuration file
+      ansible.builtin.command:
+        cmd: sudo -u apache sed -i 's/username_here/wordpress/' /var/www/html/wp-config.php
+
+    - name: Sets the user password of wordpress database into the configuration file
+      ansible.builtin.command:
+        cmd: sudo -u apache sed -i 's/password_here/27Sy72/' /var/www/html/wp-config.php
+
+    - name: Create database for wordpress with the name wordpress
+      mysql_db:
+        name: wordpress
+        login_user: root
+        login_password: 27Sy72
+        encoding: utf8
+        state: present
+
+    - name: Creates the user wordpress and grants all privileges to this user on wordpress database
+      mysql_user:
+        login_user: root
+        login_password: 27Sy72
+        name: wordpress
+        password: 27Sy72
+        priv: 'wordpress.*:ALL,GRANT'
+        state: present
+
+    - name: Cleans original tar.gz wordpress and folder extracted
+      ansible.builtin.file module:
+        path: "{{ homefolder }}"
+        state: absent
