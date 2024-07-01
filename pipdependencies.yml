@@ -1,0 +1,19 @@
+---
+- name: Install dependencies for managing Azure resources
+  hosts: localhost
+  tasks:
+    - name: Install ansible[azure] using pip
+      pip:
+        name: ansible[azure]
+        executable: pip  # Ensure pip is used for Python 2.x
+        state: present
+
+    - name: Install azure.azcollection collection
+      ansible.builtin.command:  # Use the command module instead of ansible.builtin.shell
+        cmd: ansible-galaxy collection install azure.azcollection --force
+
+    - name: Install requirements for azure.azcollection
+      pip:
+        requirements: "/home/semaphore/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt"
+        executable: pip3  # Ensure pip3 is used for Python 3.x
+        state: present
