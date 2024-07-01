@@ -3,7 +3,7 @@
   hosts: UbuntuServer
   become: yes
   vars:
-   wordpressconf: /home/marcodomingos/wordpress.conf
+   wordpressconf: /home/marcodomingos/wordpressUbuntu.conf
    sitesavailable: /etc/apache2/sites-available/wordpress.conf
 
   tasks:
