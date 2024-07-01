@@ -1,0 +1,50 @@
+---
+- name: Authenticate to Azure using device code
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Ensure temporary directory for script output
+      file:
+        path: /tmp/az_login_output
+        state: directory
+        mode: '0777'
+
+    - name: Create script to run az login with device code
+      copy:
+        content: |
+          #!/bin/bash
+          nohup az login --use-device-code >> /tmp/az_login_output/az_login.log 2>&1 &
+        dest: /tmp/az_login_script.sh
+        mode: '0755'
+
+    - name: Execute script to run az login in the background
+      script: /tmp/az_login_script.sh
+      register: login_output
+      ignore_errors: true
+
+    - name: Display login output (tail -f)
+      shell:
+        cmd: tail -n +1 -f /tmp/az_login_output/az_login.log
+      changed_when: false
+      ignore_errors: true
+      async: 600  # Run asynchronously for 10 minutes to continuously display output
+      poll: 0     # Check status immediately
+
+    - name: Wait for 1 minutes to allow login completion
+      wait_for:
+        timeout: 80
+
+    - name: Check if login was successful
+      command: az account show
+      register: account_show_output
+      ignore_errors: true
+
+    - name: Display account show output
+      debug:
+        msg: "{{ account_show_output.stdout }}"
+
+    - name: Fail if login was not successful
+      fail:
+        msg: "Azure CLI login failed. Please check the output and try again."
+      when: "'ERROR: Please run' in account_show_output.stderr"
