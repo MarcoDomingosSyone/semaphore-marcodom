@@ -1,7 +1,6 @@
 ---
 - name: Authenticate to Azure using device code
   hosts: localhost
-  become: true
 
   tasks:
     - name: Ensure temporary directory for script output
