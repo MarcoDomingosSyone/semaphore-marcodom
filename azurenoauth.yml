@@ -1,7 +1,6 @@
 ---
 - name: Authenticate to Azure using device code and create Azure snapshots
   hosts: localhost
-  become: yes
   gather_facts: false  # Keep gathering facts disabled
 
   tasks:
