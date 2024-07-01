@@ -12,24 +12,13 @@
         executable: /bin/bash
       register: current_date_shell
 
-    - name: Create Azure snapshots for multiple disks
+    - name: Create Azure snapshots for UbuntuServer
       azure_rm_snapshot:
-        resource_group: LAB-ANDREGALVAO
-        name: "alma9-patchTuesday-{{ current_date_shell.stdout }}"
+        resource_group: LAB-MARCO-TESTE
+        name: "UbuntuServer-patchTuesday-{{ current_date_shell.stdout }}"
         location: northeurope
         tenant: Syone
-        subscription_id: "92a32112-068b-4767-9112-8c18589c1909"
+        subscription_id: "afa7340c-f137-4995-8c3c-99407c5fe482"
         creation_data:
           create_option: Copy
-          source_id: '/subscriptions/92a32112-068b-4767-9112-8c18589c1909/resourceGroups/LAB-ANDREGALVAO/providers/Microsoft.Compute/disks/alma9docker_OsDisk_1_2962922a222149b5bef9a254f9c065f7'
-
-    - name: Create snapshot for debian12ansible disk
-      azure_rm_snapshot:
-        resource_group: LAB-ANDREGALVAO
-        name: "debian12-patchTuesday-{{ current_date_shell.stdout }}"
-        location: northeurope
-        tenant: Syone
-        subscription_id: "92a32112-068b-4767-9112-8c18589c1909"
-        creation_data:
-          create_option: Copy
-          source_id: '/subscriptions/92a32112-068b-4767-9112-8c18589c1909/resourceGroups/LAB-ANDREGALVAO/providers/Microsoft.Compute/disks/debian12ansible_OsDisk_1_e2114c7c4bb44dfd9272a91870951e74'
+          source_id: '/subscriptions/afa7340c-f137-4995-8c3c-99407c5fe482/resourceGroups/LAB-MARCO-TESTE/providers/Microsoft.Compute/disks/UbuntuServer-MarcoDomingos_OsDisk_1_b839ae2d944f4142a626affd49525e96'
