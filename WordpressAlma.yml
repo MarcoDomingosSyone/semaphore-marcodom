@@ -13,10 +13,23 @@
         name: "*"
         state: latest
 
-    - name: Installs httpd 
+    - name: Installs HTTPD and Wordpress Dependencies
       ansible.builtin.yum:
         name:
           - httpd
+          - php
+          - php-curl 
+          - php-bcmath 
+          - php-gd 
+          - php-soap 
+          - php-zip 
+          - php-curl 
+          - php-mbstring 
+          - php-mysqlnd 
+          - php-gd 
+          - php-xml 
+          - php-intl 
+          - php-zip
           
     - name: Download wordpress
       ansible.builtin.get_url:
@@ -52,11 +65,6 @@
         chdir: /var/www/html
         cmd: mv wp-config-sample.php wp-config.php
 
-    - name: Reload httpd.service
-      ansible.builtin.systemd_service:
-        name: httpd
-        state: reloaded
-
     - name: Sets the database into the configuration file
       ansible.builtin.command:
         cmd: sudo -u apache sed -i 's/database_name_here/wordpress/' /var/www/html/wp-config.php
@@ -86,7 +94,7 @@
         priv: 'wordpress.*:ALL,GRANT'
         state: present
 
-    - name: Cleans original tar.gz wordpress and folder extracted
-      ansible.builtin.file module:
-        path: "{{ homefolder }}"
-        state: absent
+    - name: Reload httpd.service
+      ansible.builtin.systemd_service:
+        name: httpd
+        state: reloaded
